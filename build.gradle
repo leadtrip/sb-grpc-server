@@ -16,6 +16,13 @@ java {
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://repo.repsy.io/mvn/mikew01/default"
+        credentials{
+            username System.getenv("REPSY_USERNAME")
+            password System.getenv("REPSY_PASSWORD")
+        }
+    }
 }
 
 ext {
@@ -28,6 +35,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.grpc:spring-grpc-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'wood.mike:proto-definitions:1.0.0'
 }
 
 dependencyManagement {
@@ -46,11 +54,15 @@ protobuf {
         }
     }
     generateProtoTasks {
-        all()*.plugins {
-            grpc {
-                option 'jakarta_omit'
-                option '@generated=omit'
-            }
+        all().each { task ->
+            task.inputs.dir(configurations.protobuf.files.singleFile)
+            task.plugins { grpc {} }
+        }
+    }
+    configurations {
+        protobuf {
+            transitive = false
+            resolutionStrategy.force('wood.mike:proto-definitions:1.0.0')
         }
     }
 }
